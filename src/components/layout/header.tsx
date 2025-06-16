@@ -18,25 +18,25 @@ export function Header() {
               href="/dashboard"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
-              Dashboard
+              ダッシュボード
             </Link>
             <Link
               href="/analyze"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
-              Analyze
+              楽曲分析
             </Link>
             <Link
               href="/playlists"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
-              Playlists
+              プレイリスト
             </Link>
             <Link
               href="/recommendations"
               className="transition-colors hover:text-foreground/80 text-foreground/60"
             >
-              Recommendations
+              おすすめ
             </Link>
           </nav>
         </div>

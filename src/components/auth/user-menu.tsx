@@ -44,7 +44,7 @@ export function UserMenu() {
           onSelect={() => signOut({ callbackUrl: "/" })}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+          <span>ログアウト</span>
         </DropdownMenu.Item>
       </DropdownMenu.Content>
     </DropdownMenu.Root>

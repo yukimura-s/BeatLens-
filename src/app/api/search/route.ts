@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 
 const SPOTIFY_BASE_URL = "https://api.spotify.com/v1"
@@ -7,7 +7,7 @@ const SPOTIFY_BASE_URL = "https://api.spotify.com/v1"
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.accessToken) {
+    if (!(session as { accessToken?: string })?.accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       `${SPOTIFY_BASE_URL}/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`,
       {
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${(session as { accessToken?: string }).accessToken}`,
         },
       }
     )

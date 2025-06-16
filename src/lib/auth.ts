@@ -1,4 +1,4 @@
-import { NextAuthOptions } from "next-auth"
+// NextAuth v4 compatible
 import SpotifyProvider from "next-auth/providers/spotify"
 
 const SPOTIFY_SCOPES = [
@@ -12,7 +12,7 @@ const SPOTIFY_SCOPES = [
   "playlist-modify-private",
 ].join(" ")
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   providers: [
     SpotifyProvider({
       clientId: process.env.SPOTIFY_CLIENT_ID!,
@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account }: { token: any; account: any }) {
       if (account) {
         token.accessToken = account.access_token
         token.refreshToken = account.refresh_token
@@ -40,10 +40,12 @@ export const authOptions: NextAuthOptions = {
       // Token is expired, refresh it
       return await refreshAccessToken(token)
     },
-    async session({ session, token }) {
-      session.accessToken = token.accessToken as string
-      session.error = token.error as string
-      return session
+    async session({ session, token }: { session: any; token: any }) {
+      return {
+        ...session,
+        accessToken: token.accessToken as string,
+        error: token.error as string,
+      }
     },
   },
   pages: {
@@ -51,7 +53,7 @@ export const authOptions: NextAuthOptions = {
   },
 }
 
-async function refreshAccessToken(token: any) {
+async function refreshAccessToken(token: { refreshToken: string; accessToken: string; accessTokenExpires: number }) {
   try {
     const url = "https://accounts.spotify.com/api/token"
     const response = await fetch(url, {
