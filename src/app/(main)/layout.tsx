@@ -1,7 +1,9 @@
+import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import "../../styles/premium.css"
 
 export default async function MainLayout({
   children,
@@ -15,11 +17,16 @@ export default async function MainLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main className="container py-6">
-        {children}
-      </main>
+    <div className="dashboard">
+      <div className="dashboard-layout">
+        <Sidebar />
+        <main className="main-content">
+          <Header />
+          <div className="content-body">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

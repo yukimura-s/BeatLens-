@@ -1,139 +1,66 @@
 "use client"
 
 import { useState } from "react"
-import { TrackSearch } from "@/components/tracks/track-search"
-import { TrackList } from "@/components/tracks/track-list"
-import { AudioFeaturesRadar } from "@/components/charts/audio-features-radar"
-import { FeaturesBarChart } from "@/components/charts/features-bar-chart"
-import { SpotifyTrack, AudioFeatures } from "@/types"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import * as Tabs from "@radix-ui/react-tabs"
 
 export default function AnalyzePage() {
-  const [tracks, setTracks] = useState<SpotifyTrack[]>([])
-  const [selectedTrack, setSelectedTrack] = useState<SpotifyTrack | null>(null)
-  const [audioFeatures, setAudioFeatures] = useState<AudioFeatures | null>(null)
-  const [isSearching, setIsSearching] = useState(false)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-
-  const handleSearch = async (query: string) => {
-    setIsSearching(true)
-    try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
-      if (response.ok) {
-        const data = await response.json()
-        setTracks(data.tracks.items)
-      }
-    } catch (error) {
-      console.error("Search error:", error)
-    }
-    setIsSearching(false)
-  }
-
-  const handleAnalyze = async (track: SpotifyTrack) => {
-    setSelectedTrack(track)
-    setIsAnalyzing(true)
-    try {
-      const response = await fetch(`/api/tracks/${track.id}/features`)
-      if (response.ok) {
-        const features = await response.json()
-        setAudioFeatures(features)
-      }
-    } catch (error) {
-      console.error("Analysis error:", error)
-    }
-    setIsAnalyzing(false)
-  }
+  const [searchQuery, setSearchQuery] = useState("")
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Analyze Tracks</h1>
-        <p className="text-muted-foreground">
-          Search for tracks and analyze their audio features
-        </p>
+    <>
+      <h1 className="page-title">楽曲分析</h1>
+      <div className="search-container">
+        <input 
+          type="text" 
+          className="search-input" 
+          placeholder="楽曲やアーティストを検索..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Search Tracks</CardTitle>
-          <CardDescription>
-            Enter a track name, artist, or album to get started
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TrackSearch onSearch={handleSearch} isLoading={isSearching} />
-        </CardContent>
-      </Card>
-
-      {tracks.length > 0 && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Search Results</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <TrackList
-                tracks={tracks}
-                onAnalyze={handleAnalyze}
-                isLoading={isSearching}
-              />
-            </CardContent>
-          </Card>
-
-          {selectedTrack && (
-            <div className="space-y-6">
-              {isAnalyzing ? (
-                <Card>
-                  <CardContent className="flex items-center justify-center py-8">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                      <p className="mt-2 text-sm text-muted-foreground">Analyzing track...</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : audioFeatures ? (
-                <Tabs.Root defaultValue="radar" className="w-full">
-                  <Tabs.List className="grid w-full grid-cols-2 mb-6">
-                    <Tabs.Trigger 
-                      value="radar"
-                      className="flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"
-                    >
-                      Radar Chart
-                    </Tabs.Trigger>
-                    <Tabs.Trigger 
-                      value="bar"
-                      className="flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow"
-                    >
-                      Bar Chart
-                    </Tabs.Trigger>
-                  </Tabs.List>
-                  <Tabs.Content value="radar">
-                    <AudioFeaturesRadar
-                      audioFeatures={audioFeatures}
-                      trackName={selectedTrack.name}
-                      artistName={selectedTrack.artists.map(a => a.name).join(", ")}
-                    />
-                  </Tabs.Content>
-                  <Tabs.Content value="bar">
-                    <FeaturesBarChart
-                      audioFeatures={audioFeatures}
-                      trackName={selectedTrack.name}
-                      artistName={selectedTrack.artists.map(a => a.name).join(", ")}
-                    />
-                  </Tabs.Content>
-                </Tabs.Root>
-              ) : (
-                <Card>
-                  <CardContent className="text-center py-8 text-muted-foreground">
-                    Select a track to view its audio features
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
+      
+      <div className="card">
+        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem' }}>音楽的特徴</h2>
+        <div className="progress-item">
+          <div className="progress-header">
+            <span className="progress-label">エネルギー</span>
+            <span className="progress-value">85%</span>
+          </div>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: '85%' }}></div>
+          </div>
         </div>
-      )}
-    </div>
+        <div className="progress-item">
+          <div className="progress-header">
+            <span className="progress-label">ダンス適性</span>
+            <span className="progress-value">72%</span>
+          </div>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: '72%' }}></div>
+          </div>
+        </div>
+        <div className="progress-item">
+          <div className="progress-header">
+            <span className="progress-label">アコースティック度</span>
+            <span className="progress-value">23%</span>
+          </div>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: '23%' }}></div>
+          </div>
+        </div>
+        <div className="progress-item">
+          <div className="progress-header">
+            <span className="progress-label">ポジティブ度</span>
+            <span className="progress-value">68%</span>
+          </div>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: '68%' }}></div>
+          </div>
+        </div>
+      </div>
+    </>
   )
 }
