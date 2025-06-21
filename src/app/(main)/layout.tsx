@@ -3,7 +3,6 @@ import { Header } from "@/components/layout/header"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import "../../styles/premium.css"
 
 export default async function MainLayout({
   children,
