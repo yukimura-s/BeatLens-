@@ -10,6 +10,9 @@ const SPOTIFY_SCOPES = [
   "playlist-read-collaborative",
   "playlist-modify-public",
   "playlist-modify-private",
+  "user-read-currently-playing",
+  "user-read-playback-state",
+  "user-top-read",
 ].join(" ")
 
 export const authOptions = {

@@ -25,6 +25,9 @@ export default function DashboardPage() {
   const { data: session } = useSession()
   const [user, setUser] = useState<SpotifyUser | null>(null)
   const [currentTrack, setCurrentTrack] = useState<TrackData | null>(null)
+  const [playlistCount, setPlaylistCount] = useState(0)
+  const [topTracks, setTopTracks] = useState<any[]>([])
+  const [topArtists, setTopArtists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   const [audioFeatures] = useState<AudioFeature[]>([
@@ -38,6 +41,7 @@ export default function DashboardPage() {
     if (session?.accessToken) {
       fetchUserProfile()
       fetchCurrentlyPlaying()
+      fetchUserStats()
     }
   }, [session])
 
@@ -70,6 +74,39 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error fetching currently playing:', error)
+    }
+  }
+
+  const fetchUserStats = async () => {
+    try {
+      // Fetch playlists count
+      const playlistsResponse = await fetch('https://api.spotify.com/v1/me/playlists?limit=1', {
+        headers: {
+          Authorization: `Bearer ${session?.accessToken}`,
+        },
+      })
+      const playlistsData = await playlistsResponse.json()
+      setPlaylistCount(playlistsData.total || 0)
+
+      // Fetch top tracks and artists
+      const [topTracksResponse, topArtistsResponse] = await Promise.all([
+        fetch('https://api.spotify.com/v1/me/top/tracks?limit=5', {
+          headers: { Authorization: `Bearer ${session?.accessToken}` }
+        }),
+        fetch('https://api.spotify.com/v1/me/top/artists?limit=5', {
+          headers: { Authorization: `Bearer ${session?.accessToken}` }
+        })
+      ])
+
+      const [topTracksData, topArtistsData] = await Promise.all([
+        topTracksResponse.json(),
+        topArtistsResponse.json()
+      ])
+
+      setTopTracks(topTracksData.items || [])
+      setTopArtists(topArtistsData.items || [])
+    } catch (error) {
+      console.error('Error fetching user stats:', error)
     }
   }
 
@@ -121,16 +158,16 @@ export default function DashboardPage() {
           <div className="stat-label">フォロワー</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">127</div>
+          <div className="stat-value">{playlistCount}</div>
           <div className="stat-label">プレイリスト</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">94%</div>
-          <div className="stat-label">マッチ精度</div>
+          <div className="stat-value">{topTracks.length}</div>
+          <div className="stat-label">お気に入り楽曲</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">8.2</div>
-          <div className="stat-label">平均エネルギー</div>
+          <div className="stat-value">{topArtists.length}</div>
+          <div className="stat-label">フォロー中のアーティスト</div>
         </div>
       </div>
 
