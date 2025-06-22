@@ -107,13 +107,6 @@ export default function DashboardPage() {
       fetchUserProfile()
       fetchCurrentlyPlaying()
       fetchUserStats()
-      
-      // Set up interval for real-time updates
-      const interval = setInterval(() => {
-        fetchCurrentlyPlaying()
-      }, 5000) // Update every 5 seconds
-
-      return () => clearInterval(interval)
     }
   }, [session])
 
@@ -215,10 +208,6 @@ export default function DashboardPage() {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
 
-  const formatProgress = (progressMs: number, durationMs: number) => {
-    return Math.round((progressMs / durationMs) * 100)
-  }
-
   if (loading) {
     return (
       <>
@@ -283,7 +272,7 @@ export default function DashboardPage() {
       {/* Currently Playing */}
       <div className="card">
         <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>
-          {playbackState?.item ? (playbackState.is_playing ? '現在再生中' : '一時停止中') : 'Spotify Player'}
+          {playbackState?.item ? (playbackState.is_playing ? '現在再生中' : '最後に再生した楽曲') : '楽曲分析'}
         </h2>
         
         {playbackState?.item ? (
@@ -352,52 +341,6 @@ export default function DashboardPage() {
                   </a>
                 </div>
               </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div style={{ marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>
-                  {formatDuration(playbackState.progress_ms || 0)}
-                </span>
-                <span style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>
-                  {formatDuration(playbackState.item.duration_ms)}
-                </span>
-              </div>
-              <div style={{ 
-                width: '100%',
-                height: '6px',
-                background: 'var(--light-gray)',
-                borderRadius: '3px',
-                overflow: 'hidden'
-              }}>
-                <div style={{ 
-                  width: `${formatProgress(playbackState.progress_ms || 0, playbackState.item.duration_ms)}%`,
-                  height: '100%',
-                  background: 'var(--premium-gradient)',
-                  transition: 'width 1s ease'
-                }} />
-              </div>
-            </div>
-
-            {/* Music Visualization */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'flex-end',
-              height: '60px',
-              marginBottom: '2rem',
-              gap: '4px'
-            }}>
-              {[...Array(10)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className={`wave-bar ${playbackState.is_playing ? 'playing' : 'paused'}`}
-                  style={{
-                    animationDelay: playbackState.is_playing ? `${i * 0.1}s` : 'none'
-                  }}
-                />
-              ))}
             </div>
 
             {/* Audio Features */}
@@ -555,10 +498,10 @@ export default function DashboardPage() {
           <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎵</div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>
-              音楽を再生してリアルタイム分析を開始
+              楽曲分析を開始
             </h3>
             <p style={{ color: 'var(--dark-gray)' }}>
-              Spotifyで音楽を再生すると、ここにリアルタイムな楽曲分析が表示されます。
+              Spotifyで音楽を再生すると、ここに楽曲の詳細分析が表示されます。
             </p>
           </div>
         )}
