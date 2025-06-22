@@ -328,6 +328,26 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {/* Music Visualization */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'flex-end',
+              height: '60px',
+              marginBottom: '2rem',
+              gap: '4px'
+            }}>
+              {[...Array(10)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`wave-bar ${playbackState.is_playing ? 'playing' : 'paused'}`}
+                  style={{
+                    animationDelay: playbackState.is_playing ? `${i * 0.1}s` : 'none'
+                  }}
+                />
+              ))}
+            </div>
+
             {/* Audio Features */}
             {currentTrackFeatures && (
               <div>
@@ -417,21 +437,9 @@ export default function DashboardPage() {
             <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>
               音楽を再生してリアルタイム分析を開始
             </h3>
-            <p style={{ color: 'var(--dark-gray)', marginBottom: '1.5rem' }}>
+            <p style={{ color: 'var(--dark-gray)' }}>
               Spotifyで音楽を再生すると、ここにリアルタイムな楽曲分析が表示されます。
             </p>
-            <div className="wave-container">
-              <div className="wave-bar"></div>
-              <div className="wave-bar"></div>
-              <div className="wave-bar"></div>
-              <div className="wave-bar"></div>
-              <div className="wave-bar"></div>
-              <div className="wave-bar"></div>
-              <div className="wave-bar"></div>
-              <div className="wave-bar"></div>
-              <div className="wave-bar"></div>
-              <div className="wave-bar"></div>
-            </div>
           </div>
         )}
       </div>
