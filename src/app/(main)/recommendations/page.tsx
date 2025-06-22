@@ -123,21 +123,21 @@ export default function RecommendationsPage() {
       const enhancedRecommendations = await enhanceTracksWithAnalysis(generalData.tracks || [])
       setRecommendations(enhancedRecommendations)
       
-      // Generate mood-based recommendations
+      // Generate genre-based recommendations
       const moodRecs: {[key: string]: EnhancedTrack[]} = {}
-      for (const mood of MOOD_CATEGORIES.slice(0, 4)) { // Limit to 4 moods for performance
-        const moodParams = generateRecommendationParams(profile, mood.name)
-        const moodResponse = await fetch(
+      for (const genre of MOOD_CATEGORIES.slice(0, 4)) { // Limit to 4 genres for performance
+        const genreParams = generateRecommendationParams(profile, genre.name)
+        const genreResponse = await fetch(
           `https://api.spotify.com/v1/recommendations?${new URLSearchParams({
             seed_artists: topArtists.slice(0, 2).map(a => a.id).join(',') || '',
-            ...Object.fromEntries(Object.entries(moodParams).map(([k, v]) => [k, String(v)]))
+            ...Object.fromEntries(Object.entries(genreParams).map(([k, v]) => [k, String(v)]))
           })}`,
           {
             headers: { Authorization: `Bearer ${(session as any)?.accessToken}` }
           }
         )
-        const moodData = await moodResponse.json()
-        moodRecs[mood.name] = await enhanceTracksWithAnalysis(moodData.tracks?.slice(0, 6) || [])
+        const genreData = await genreResponse.json()
+        moodRecs[genre.name] = await enhanceTracksWithAnalysis(genreData.tracks?.slice(0, 6) || [])
       }
       setMoodRecommendations(moodRecs)
       
@@ -398,11 +398,11 @@ export default function RecommendationsPage() {
         </div>
       )}
 
-      {/* Mood-based Recommendations */}
+      {/* Genre-based Recommendations */}
       {Object.keys(moodRecommendations).length > 0 && (
         <div className="card" style={{ marginBottom: '2rem' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>
-            🎭 気分別おすすめ
+            🎵 ジャンル別おすすめ
           </h2>
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
             {MOOD_CATEGORIES.filter(mood => moodRecommendations[mood.name]?.length > 0).map((mood) => (
@@ -432,7 +432,7 @@ export default function RecommendationsPage() {
           {selectedMood && moodRecommendations[selectedMood] && (
             <div>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '1rem' }}>
-                {MOOD_CATEGORIES.find(m => m.name === selectedMood)?.emoji} {selectedMood}な楽曲
+                {MOOD_CATEGORIES.find(m => m.name === selectedMood)?.emoji} {selectedMood}
               </h3>
               <p style={{ color: 'var(--dark-gray)', marginBottom: '1.5rem' }}>
                 {MOOD_CATEGORIES.find(m => m.name === selectedMood)?.description}

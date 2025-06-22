@@ -41,49 +41,49 @@ export interface MoodCategory {
   emoji: string
 }
 
-// 音楽の気分カテゴリー定義
+// 音楽のジャンル・スタイル分類定義
 export const MOOD_CATEGORIES: MoodCategory[] = [
   {
-    name: 'エネルギッシュ',
-    description: 'ハイテンポで元気な楽曲',
-    criteria: { energy: [0.7, 1.0], valence: [0.6, 1.0], danceability: [0.6, 1.0] },
+    name: 'ポップ',
+    description: 'キャッチーで聴きやすいポップミュージック',
+    criteria: { energy: [0.4, 0.8], valence: [0.5, 1.0], danceability: [0.4, 0.8] },
     color: 'var(--neon-pink)',
-    emoji: '🔥'
+    emoji: '🎵'
   },
   {
-    name: 'ハッピー',
-    description: '明るく楽しい気分の楽曲',
-    criteria: { energy: [0.4, 0.8], valence: [0.7, 1.0] },
+    name: 'ロック',
+    description: 'パワフルで力強いロックサウンド',
+    criteria: { energy: [0.6, 1.0], valence: [0.3, 0.8], acousticness: [0.0, 0.4] },
     color: 'var(--sunset-orange)',
-    emoji: '😊'
+    emoji: '🎸'
   },
   {
-    name: 'リラックス',
-    description: 'ゆったりと落ち着いた楽曲',
-    criteria: { energy: [0.0, 0.5], valence: [0.3, 0.7], acousticness: [0.3, 1.0] },
-    color: 'var(--mint-green)',
-    emoji: '🌊'
-  },
-  {
-    name: 'メランコリック',
-    description: '物思いにふけるような楽曲',
-    criteria: { energy: [0.0, 0.6], valence: [0.0, 0.4] },
-    color: 'var(--ocean-blue)',
-    emoji: '🌙'
-  },
-  {
-    name: 'ダンス',
-    description: '踊りたくなるような楽曲',
-    criteria: { energy: [0.6, 1.0], danceability: [0.7, 1.0], valence: [0.5, 1.0] },
+    name: 'EDM/ダンス',
+    description: '踊れる電子音楽・ダンスミュージック',
+    criteria: { energy: [0.6, 1.0], valence: [0.4, 1.0], danceability: [0.7, 1.0], acousticness: [0.0, 0.3] },
     color: 'var(--electric-purple)',
     emoji: '💃'
   },
   {
-    name: 'フォーカス',
-    description: '集中したい時の楽曲',
-    criteria: { energy: [0.2, 0.7], valence: [0.3, 0.8], instrumentalness: [0.5, 1.0] },
+    name: 'アコースティック',
+    description: '生楽器中心のナチュラルサウンド',
+    criteria: { energy: [0.2, 0.7], acousticness: [0.5, 1.0], valence: [0.3, 0.8] },
+    color: 'var(--mint-green)',
+    emoji: '🎼'
+  },
+  {
+    name: 'ヒップホップ/R&B',
+    description: 'グルーヴィなヒップホップ・R&Bサウンド',
+    criteria: { energy: [0.4, 0.9], danceability: [0.6, 1.0], valence: [0.2, 0.8] },
+    color: 'var(--ocean-blue)',
+    emoji: '🎤'
+  },
+  {
+    name: 'アンビエント/チル',
+    description: 'リラックスできる環境音楽・チルアウト',
+    criteria: { energy: [0.0, 0.5], valence: [0.2, 0.7], instrumentalness: [0.3, 1.0] },
     color: 'var(--premium-gradient)',
-    emoji: '🎯'
+    emoji: '🌙'
   }
 ]
 
@@ -170,7 +170,7 @@ export function calculateSimilarity(profile1: MusicProfile, profile2: MusicProfi
 }
 
 // 音楽的特徴に基づくおすすめパラメータを生成
-export function generateRecommendationParams(profile: MusicProfile, moodBoost?: string): any {
+export function generateRecommendationParams(profile: MusicProfile, genreBoost?: string): any {
   const params: any = {
     target_danceability: profile.avgDanceability,
     target_energy: profile.avgEnergy,
@@ -181,17 +181,17 @@ export function generateRecommendationParams(profile: MusicProfile, moodBoost?: 
     limit: 20
   }
 
-  // 気分に応じた調整
-  if (moodBoost) {
-    const mood = MOOD_CATEGORIES.find(m => m.name === moodBoost)
-    if (mood) {
-      params.target_energy = (mood.criteria.energy[0] + mood.criteria.energy[1]) / 2
-      params.target_valence = (mood.criteria.valence[0] + mood.criteria.valence[1]) / 2
-      if (mood.criteria.danceability) {
-        params.target_danceability = (mood.criteria.danceability[0] + mood.criteria.danceability[1]) / 2
+  // ジャンルに応じた調整
+  if (genreBoost) {
+    const genre = MOOD_CATEGORIES.find(m => m.name === genreBoost)
+    if (genre) {
+      params.target_energy = (genre.criteria.energy[0] + genre.criteria.energy[1]) / 2
+      params.target_valence = (genre.criteria.valence[0] + genre.criteria.valence[1]) / 2
+      if (genre.criteria.danceability) {
+        params.target_danceability = (genre.criteria.danceability[0] + genre.criteria.danceability[1]) / 2
       }
-      if (mood.criteria.acousticness) {
-        params.target_acousticness = (mood.criteria.acousticness[0] + mood.criteria.acousticness[1]) / 2
+      if (genre.criteria.acousticness) {
+        params.target_acousticness = (genre.criteria.acousticness[0] + genre.criteria.acousticness[1]) / 2
       }
     }
   }
@@ -215,7 +215,8 @@ export function analyzeTrackDetails(features: AudioFeatures) {
       emotion: features.valence > 0.7 ? 'ポジティブ' : features.valence > 0.4 ? 'ニュートラル' : 'メランコリック',
       acoustic: features.acousticness > 0.7 ? 'アコースティック' : features.acousticness > 0.3 ? 'ハイブリッド' : '電子音楽',
       vocal: features.speechiness > 0.66 ? 'スピーチライク' : features.speechiness > 0.33 ? 'ラップ/トーク' : '楽器中心',
-      instrumental: features.instrumentalness > 0.5 ? 'インストゥルメンタル' : 'ボーカル中心'
+      instrumental: features.instrumentalness > 0.5 ? 'インストゥルメンタル' : 'ボーカル中心',
+      genre: getGenreStyle(features)
     },
     technical: {
       key: ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'][features.key] || '不明',
@@ -224,6 +225,29 @@ export function analyzeTrackDetails(features: AudioFeatures) {
       tempo: `${Math.round(features.tempo)} BPM`,
       loudness: `${Math.round(features.loudness)} dB`
     }
+  }
+}
+
+// ジャンル・スタイル推定
+function getGenreStyle(features: AudioFeatures): string {
+  const category = categorizeMood(features)
+  if (category) {
+    return category.name
+  }
+  
+  // フォールバック分類
+  if (features.energy > 0.8 && features.danceability > 0.7) {
+    return 'EDM/ダンス'
+  } else if (features.energy > 0.7 && features.acousticness < 0.3) {
+    return 'ロック'
+  } else if (features.acousticness > 0.5) {
+    return 'アコースティック'
+  } else if (features.danceability > 0.6 && features.valence > 0.5) {
+    return 'ポップ'
+  } else if (features.energy < 0.4 && features.instrumentalness > 0.3) {
+    return 'アンビエント/チル'
+  } else {
+    return 'その他'
   }
 }
 
