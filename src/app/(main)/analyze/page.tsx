@@ -444,8 +444,8 @@ export default function AnalyzePage() {
                 { key: 'valence', label: 'ポジティブ度', color: 'var(--sunset-orange)' },
                 { key: 'acousticness', label: 'アコースティック度', color: 'var(--ocean-blue)' }
               ].map(feature => {
-                const value1 = audioFeatures[feature.key as keyof AudioFeatures] as number
-                const value2 = comparisonFeatures[feature.key as keyof AudioFeatures] as number
+                const value1 = audioFeatures![feature.key as keyof AudioFeatures] as number
+                const value2 = comparisonFeatures![feature.key as keyof AudioFeatures] as number
                 const diff = Math.abs(value1 - value2)
                 
                 return (

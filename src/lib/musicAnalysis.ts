@@ -35,6 +35,7 @@ export interface MoodCategory {
     valence: [number, number]
     danceability?: [number, number]
     acousticness?: [number, number]
+    instrumentalness?: [number, number]
   }
   color: string
   emoji: string
@@ -127,7 +128,8 @@ export function categorizeMood(features: AudioFeatures): MoodCategory | null {
     if (isInRange(features.energy, criteria.energy) &&
         isInRange(features.valence, criteria.valence) &&
         (!criteria.danceability || isInRange(features.danceability, criteria.danceability)) &&
-        (!criteria.acousticness || isInRange(features.acousticness, criteria.acousticness))) {
+        (!criteria.acousticness || isInRange(features.acousticness, criteria.acousticness)) &&
+        (!criteria.instrumentalness || isInRange(features.instrumentalness, criteria.instrumentalness))) {
       return category
     }
   }
