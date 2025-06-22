@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { useSession } from "next-auth/react"
+import { calculateSimilarity, calculateMusicProfile } from '@/lib/musicAnalysis'
 
 interface SpotifyTrack {
   id: string
@@ -36,8 +37,12 @@ export default function AnalyzePage() {
   const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([])
   const [selectedTrack, setSelectedTrack] = useState<SpotifyTrack | null>(null)
   const [audioFeatures, setAudioFeatures] = useState<AudioFeatures | null>(null)
+  const [comparisonTrack, setComparisonTrack] = useState<SpotifyTrack | null>(null)
+  const [comparisonFeatures, setComparisonFeatures] = useState<AudioFeatures | null>(null)
+  const [similarity, setSimilarity] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
+  const [comparingMode, setComparingMode] = useState(false)
 
   const searchTracks = useCallback(async () => {
     if (!searchQuery.trim() || !(session as any)?.accessToken) return
@@ -64,25 +69,74 @@ export default function AnalyzePage() {
   const analyzeTrack = useCallback(async (track: SpotifyTrack) => {
     if (!(session as any)?.accessToken) return
 
-    setSelectedTrack(track)
-    setAnalyzing(true)
-    try {
-      const response = await fetch(
-        `https://api.spotify.com/v1/audio-features/${track.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${(session as any)?.accessToken}`,
-          },
+    if (comparingMode && selectedTrack) {
+      // 比較モードの場合、2番目の楽曲として設定
+      setComparisonTrack(track)
+      setAnalyzing(true)
+      try {
+        const response = await fetch(
+          `https://api.spotify.com/v1/audio-features/${track.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${(session as any)?.accessToken}`,
+            },
+          }
+        )
+        const features = await response.json()
+        setComparisonFeatures(features)
+        
+        // 類似度を計算
+        if (audioFeatures && features) {
+          const profile1 = calculateMusicProfile([audioFeatures])
+          const profile2 = calculateMusicProfile([features])
+          const similarityScore = calculateSimilarity(profile1, profile2)
+          setSimilarity(similarityScore)
         }
-      )
-      const features = await response.json()
-      setAudioFeatures(features)
-    } catch (error) {
-      console.error('Error fetching audio features:', error)
-    } finally {
-      setAnalyzing(false)
+        
+        setComparingMode(false)
+      } catch (error) {
+        console.error('Error fetching comparison audio features:', error)
+      } finally {
+        setAnalyzing(false)
+      }
+    } else {
+      // 通常モード
+      setSelectedTrack(track)
+      setAnalyzing(true)
+      try {
+        const response = await fetch(
+          `https://api.spotify.com/v1/audio-features/${track.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${(session as any)?.accessToken}`,
+            },
+          }
+        )
+        const features = await response.json()
+        setAudioFeatures(features)
+        
+        // 比較データをクリア
+        setComparisonTrack(null)
+        setComparisonFeatures(null)
+        setSimilarity(null)
+      } catch (error) {
+        console.error('Error fetching audio features:', error)
+      } finally {
+        setAnalyzing(false)
+      }
     }
-  }, [session])
+  }, [session, comparingMode, selectedTrack, audioFeatures])
+
+  const startComparison = () => {
+    setComparingMode(true)
+  }
+
+  const clearComparison = () => {
+    setComparisonTrack(null)
+    setComparisonFeatures(null)
+    setSimilarity(null)
+    setComparingMode(false)
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -246,6 +300,48 @@ export default function AnalyzePage() {
               </a>
             </div>
           </div>
+          
+          {/* Comparison Controls */}
+          <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'var(--light-gray)', borderRadius: '12px' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem' }}>楽曲比較</h3>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              {!comparisonTrack && (
+                <button
+                  onClick={startComparison}
+                  disabled={comparingMode}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: comparingMode ? 'var(--sunset-orange)' : 'var(--electric-purple)',
+                    color: 'white',
+                    fontWeight: '600',
+                    cursor: comparingMode ? 'default' : 'pointer',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  {comparingMode ? '比較楽曲を選択してください...' : '別の楽曲と比較'}
+                </button>
+              )}
+              {comparisonTrack && (
+                <button
+                  onClick={clearComparison}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'var(--dark-gray)',
+                    color: 'white',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  比較をクリア
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -258,6 +354,149 @@ export default function AnalyzePage() {
               <div className="dot"></div>
             </div>
             <p style={{ marginTop: '1rem', color: 'var(--dark-gray)' }}>楽曲を分析中...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Comparison Results */}
+      {comparisonTrack && comparisonFeatures && similarity !== null && (
+        <div className="card">
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>
+            🎭 楽曲比較結果
+          </h2>
+          
+          {/* Similarity Score */}
+          <div style={{ 
+            textAlign: 'center', 
+            marginBottom: '2rem',
+            padding: '1.5rem',
+            background: 'var(--light-gray)',
+            borderRadius: '12px'
+          }}>
+            <div style={{ fontSize: '3rem', fontWeight: '700', color: 'var(--electric-purple)' }}>
+              {Math.round(similarity * 100)}%
+            </div>
+            <div style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+              類似度
+            </div>
+            <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>
+              {similarity > 0.8 ? '🎯 極めて類似した楽曲です' : 
+               similarity > 0.6 ? '🔥 とても似ている楽曲です' : 
+               similarity > 0.4 ? '✨ やや似ている楽曲です' : 
+               '🌟 異なる特徴を持つ楽曲です'}
+            </div>
+          </div>
+
+          {/* Comparison Chart */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '2rem', alignItems: 'center' }}>
+            {/* Track 1 */}
+            <div style={{ textAlign: 'center' }}>
+              {selectedTrack?.album.images[0] && (
+                <img 
+                  src={selectedTrack.album.images[0].url}
+                  alt={selectedTrack.album.name}
+                  style={{ width: '80px', height: '80px', borderRadius: '12px', margin: '0 auto 1rem' }}
+                />
+              )}
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                {selectedTrack?.name}
+              </h3>
+              <p style={{ color: 'var(--dark-gray)', fontSize: '0.875rem' }}>
+                {selectedTrack?.artists.map(artist => artist.name).join(', ')}
+              </p>
+            </div>
+
+            {/* VS */}
+            <div style={{ 
+              fontSize: '2rem', 
+              fontWeight: '700', 
+              color: 'var(--electric-purple)',
+              textAlign: 'center'
+            }}>
+              VS
+            </div>
+
+            {/* Track 2 */}
+            <div style={{ textAlign: 'center' }}>
+              {comparisonTrack.album.images[0] && (
+                <img 
+                  src={comparisonTrack.album.images[0].url}
+                  alt={comparisonTrack.album.name}
+                  style={{ width: '80px', height: '80px', borderRadius: '12px', margin: '0 auto 1rem' }}
+                />
+              )}
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                {comparisonTrack.name}
+              </h3>
+              <p style={{ color: 'var(--dark-gray)', fontSize: '0.875rem' }}>
+                {comparisonTrack.artists.map(artist => artist.name).join(', ')}
+              </p>
+            </div>
+          </div>
+
+          {/* Feature Comparison */}
+          <div style={{ marginTop: '2rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>特徴比較</h3>
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              {[
+                { key: 'energy', label: 'エネルギー', color: 'var(--neon-pink)' },
+                { key: 'danceability', label: 'ダンス適性', color: 'var(--electric-purple)' },
+                { key: 'valence', label: 'ポジティブ度', color: 'var(--sunset-orange)' },
+                { key: 'acousticness', label: 'アコースティック度', color: 'var(--ocean-blue)' }
+              ].map(feature => {
+                const value1 = audioFeatures[feature.key as keyof AudioFeatures] as number
+                const value2 = comparisonFeatures[feature.key as keyof AudioFeatures] as number
+                const diff = Math.abs(value1 - value2)
+                
+                return (
+                  <div key={feature.key} style={{ marginBottom: '1rem' }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      marginBottom: '0.5rem'
+                    }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
+                        {feature.label}
+                      </span>
+                      <span style={{ 
+                        fontSize: '0.75rem', 
+                        color: diff < 0.2 ? 'var(--mint-green)' : diff < 0.4 ? 'var(--sunset-orange)' : 'var(--neon-pink)',
+                        fontWeight: '600'
+                      }}>
+                        {diff < 0.2 ? '似ている' : diff < 0.4 ? 'やや異なる' : '大きく異なる'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <div style={{ flex: 1, background: 'var(--light-gray)', borderRadius: '4px', height: '8px', position: 'relative' }}>
+                        <div style={{ 
+                          width: `${value1 * 100}%`, 
+                          height: '100%', 
+                          background: feature.color, 
+                          borderRadius: '4px' 
+                        }} />
+                      </div>
+                      <span style={{ fontSize: '0.75rem', minWidth: '3rem', textAlign: 'center' }}>
+                        {Math.round(value1 * 100)}%
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
+                      <div style={{ flex: 1, background: 'var(--light-gray)', borderRadius: '4px', height: '8px', position: 'relative' }}>
+                        <div style={{ 
+                          width: `${value2 * 100}%`, 
+                          height: '100%', 
+                          background: `${feature.color}80`, 
+                          borderRadius: '4px' 
+                        }} />
+                      </div>
+                      <span style={{ fontSize: '0.75rem', minWidth: '3rem', textAlign: 'center' }}>
+                        {Math.round(value2 * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
       )}

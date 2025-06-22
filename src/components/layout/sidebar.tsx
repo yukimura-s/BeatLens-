@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Headphones, TrendingUp, LayoutDashboard } from "lucide-react"
+import { BarChart3, Headphones, TrendingUp, LayoutDashboard, Search } from "lucide-react"
 
 const navItems = [
   {
@@ -24,6 +24,11 @@ const navItems = [
     title: "発見",
     href: "/recommendations",
     icon: TrendingUp
+  },
+  {
+    title: "類似楽曲",
+    href: "/similar",
+    icon: Search
   }
 ]
 
