@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
+import { 
+  calculateMusicProfile, 
+  generateRecommendationParams, 
+  MOOD_CATEGORIES, 
+  analyzeTrackDetails,
+  AudioFeatures,
+  categorizeMood
+} from '@/lib/musicAnalysis'
 
 interface SpotifyPlaylist {
   id: string
@@ -18,6 +26,18 @@ interface PlaylistTrack {
   name: string
   artists: { name: string }[]
   duration_ms: number
+  popularity?: number
+  external_urls?: { spotify: string }
+  album?: {
+    name: string
+    images: { url: string }[]
+  }
+}
+
+interface RecommendedTrack extends PlaylistTrack {
+  audioFeatures?: AudioFeatures
+  analysis?: ReturnType<typeof analyzeTrackDetails>
+  similarityReason?: string
 }
 
 export default function PlaylistsPage() {
@@ -26,8 +46,12 @@ export default function PlaylistsPage() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<SpotifyPlaylist | null>(null)
   const [playlistTracks, setPlaylistTracks] = useState<PlaylistTrack[]>([])
   const [playlistAnalysis, setPlaylistAnalysis] = useState<any>(null)
+  const [playlistProfile, setPlaylistProfile] = useState<any>(null)
+  const [recommendedTracks, setRecommendedTracks] = useState<RecommendedTrack[]>([])
+  const [dominantGenres, setDominantGenres] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
+  const [generatingRecs, setGeneratingRecs] = useState(false)
 
   useEffect(() => {
     if ((session as any)?.accessToken) {
@@ -71,8 +95,8 @@ export default function PlaylistsPage() {
       const tracks = tracksData.items?.map((item: any) => item.track).filter((track: any) => track) || []
       setPlaylistTracks(tracks)
 
-      // Get audio features for first 10 tracks (to avoid rate limits)
-      const trackIds = tracks.slice(0, 10).map((track: any) => track.id).join(',')
+      // Get audio features for tracks (limit to 20 for better analysis)
+      const trackIds = tracks.slice(0, 20).map((track: any) => track.id).join(',')
       if (trackIds) {
         const featuresResponse = await fetch(
           `https://api.spotify.com/v1/audio-features?ids=${trackIds}`,
@@ -84,23 +108,118 @@ export default function PlaylistsPage() {
         )
         const featuresData = await featuresResponse.json()
         
-        // Calculate average features
+        // Calculate detailed analysis
         const features = featuresData.audio_features?.filter((f: any) => f) || []
         if (features.length > 0) {
+          // Basic statistics
           const analysis = {
             energy: features.reduce((sum: number, f: any) => sum + f.energy, 0) / features.length,
             danceability: features.reduce((sum: number, f: any) => sum + f.danceability, 0) / features.length,
             valence: features.reduce((sum: number, f: any) => sum + f.valence, 0) / features.length,
             acousticness: features.reduce((sum: number, f: any) => sum + f.acousticness, 0) / features.length,
             tempo: features.reduce((sum: number, f: any) => sum + f.tempo, 0) / features.length,
+            loudness: features.reduce((sum: number, f: any) => sum + f.loudness, 0) / features.length,
+            speechiness: features.reduce((sum: number, f: any) => sum + f.speechiness, 0) / features.length,
+            instrumentalness: features.reduce((sum: number, f: any) => sum + f.instrumentalness, 0) / features.length,
           }
           setPlaylistAnalysis(analysis)
+          
+          // Generate music profile
+          const profile = calculateMusicProfile(features)
+          setPlaylistProfile(profile)
+          
+          // Analyze dominant genres
+          const genres = features.map((f: any) => {
+            const mood = categorizeMood(f)
+            return mood ? mood.name : null
+          }).filter(Boolean)
+          
+          const genreCount: { [key: string]: number } = {}
+          genres.forEach((genre: any) => {
+            if (genre) genreCount[genre] = (genreCount[genre] || 0) + 1
+          })
+          
+          const sortedGenres = Object.entries(genreCount)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 3)
+            .map(([genre]) => genre)
+          
+          setDominantGenres(sortedGenres)
+          
+          // Generate recommendations
+          await generatePlaylistRecommendations(profile, tracks.slice(0, 5))
         }
       }
     } catch (error) {
       console.error('Error analyzing playlist:', error)
     } finally {
       setAnalyzing(false)
+    }
+  }
+
+  const generatePlaylistRecommendations = async (profile: any, seedTracks: PlaylistTrack[]) => {
+    setGeneratingRecs(true)
+    try {
+      // Generate recommendations based on playlist profile
+      const recParams = generateRecommendationParams(profile)
+      const seedTrackIds = seedTracks.map(t => t.id).slice(0, 5).join(',')
+      
+      const response = await fetch(
+        `https://api.spotify.com/v1/recommendations?${new URLSearchParams({
+          seed_tracks: seedTrackIds,
+          ...Object.fromEntries(Object.entries(recParams).map(([k, v]) => [k, String(v)])),
+          limit: '15'
+        })}`,
+        {
+          headers: {
+            Authorization: `Bearer ${(session as any)?.accessToken}`,
+          },
+        }
+      )
+      
+      const data = await response.json()
+      const tracks = data.tracks || []
+      
+      // Enhance recommendations with analysis
+      if (tracks.length > 0) {
+        const trackIds = tracks.map((t: any) => t.id).join(',')
+        const featuresResponse = await fetch(
+          `https://api.spotify.com/v1/audio-features?ids=${trackIds}`,
+          {
+            headers: {
+              Authorization: `Bearer ${(session as any)?.accessToken}`,
+            },
+          }
+        )
+        const featuresData = await featuresResponse.json()
+        const audioFeatures = featuresData.audio_features || []
+        
+        const enhancedTracks = tracks.map((track: any, index: number) => {
+          const features = audioFeatures[index]
+          const analysis = features ? analyzeTrackDetails(features) : undefined
+          
+          // Determine similarity reason
+          let reason = 'プレイリストの特徴に基づく'
+          if (analysis?.mood) {
+            if (dominantGenres.includes(analysis.mood.name)) {
+              reason = `${analysis.mood.name}ジャンルの特徴`
+            }
+          }
+          
+          return {
+            ...track,
+            audioFeatures: features,
+            analysis,
+            similarityReason: reason
+          }
+        })
+        
+        setRecommendedTracks(enhancedTracks)
+      }
+    } catch (error) {
+      console.error('Error generating recommendations:', error)
+    } finally {
+      setGeneratingRecs(false)
     }
   }
 
@@ -308,6 +427,191 @@ export default function PlaylistsPage() {
                 <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>分析済み楽曲</div>
               </div>
             </div>
+          </div>
+          
+          {/* Dominant Genres */}
+          {dominantGenres.length > 0 && (
+            <div style={{ marginTop: '2rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>🎵 主要ジャンル</h3>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                {dominantGenres.map((genre, index) => {
+                  const genreInfo = MOOD_CATEGORIES.find(m => m.name === genre)
+                  return (
+                    <div
+                      key={genre}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        borderRadius: '20px',
+                        background: genreInfo?.color || 'var(--light-gray)',
+                        color: 'white',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <span>{genreInfo?.emoji}</span>
+                      {genre}
+                      {index === 0 && <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>(主要)</span>}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Loading Recommendations */}
+      {generatingRecs && (
+        <div className="card">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div className="loading-dots">
+              <div className="dot"></div>
+              <div className="dot"></div>
+              <div className="dot"></div>
+            </div>
+            <p style={{ marginTop: '1rem', color: 'var(--dark-gray)' }}>プレイリストに基づくおすすめを生成中...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Playlist-based Recommendations */}
+      {recommendedTracks.length > 0 && (
+        <div className="card">
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem' }}>
+            🎯 このプレイリストにおすすめ
+          </h2>
+          <p style={{ color: 'var(--dark-gray)', marginBottom: '2rem' }}>
+            プレイリストの音楽的特徴を分析して、相性の良い楽曲を厳選しました
+          </p>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+            {recommendedTracks.map((track, index) => (
+              <div 
+                key={track.id}
+                style={{
+                  padding: '1rem',
+                  borderRadius: '12px',
+                  background: 'var(--light-gray)',
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  position: 'relative'
+                }}
+                onClick={() => track.external_urls?.spotify && window.open(track.external_urls.spotify, '_blank')}
+              >
+                {/* Recommendation Rank */}
+                <div style={{
+                  position: 'absolute',
+                  top: '0.5rem',
+                  left: '0.5rem',
+                  width: '1.5rem',
+                  height: '1.5rem',
+                  borderRadius: '50%',
+                  background: 'var(--premium-gradient)',
+                  color: 'white',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 1
+                }}>
+                  {index + 1}
+                </div>
+
+                {track.album?.images[0] && (
+                  <img 
+                    src={track.album.images[0].url}
+                    alt={track.album.name}
+                    style={{ 
+                      width: '100%', 
+                      aspectRatio: '1', 
+                      borderRadius: '8px', 
+                      objectFit: 'cover',
+                      marginBottom: '1rem'
+                    }}
+                  />
+                )}
+                
+                <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                  {track.name}
+                </h3>
+                <p style={{ color: 'var(--dark-gray)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  {track.artists.map(artist => artist.name).join(', ')}
+                </p>
+
+                {/* Similarity Reason */}
+                <div style={{ 
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '12px', 
+                  background: 'var(--mint-green)',
+                  color: 'white',
+                  fontSize: '0.75rem',
+                  fontWeight: '600',
+                  marginBottom: '0.5rem'
+                }}>
+                  ✨ {track.similarityReason}
+                </div>
+
+                {/* Genre Badge */}
+                {track.analysis?.mood && (
+                  <div style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.25rem 0.75rem', 
+                    borderRadius: '12px', 
+                    background: track.analysis.mood.color,
+                    color: 'white',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    marginBottom: '0.5rem',
+                    marginLeft: '0.5rem'
+                  }}>
+                    {track.analysis.mood.emoji} {track.analysis.mood.name}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--dark-gray)' }}>
+                    {formatDuration(track.duration_ms)}
+                  </span>
+                  {track.popularity && (
+                    <div style={{ 
+                      padding: '0.25rem 0.75rem', 
+                      borderRadius: '12px', 
+                      background: 'var(--premium-gradient)',
+                      color: 'white',
+                      fontSize: '0.75rem',
+                      fontWeight: '600'
+                    }}>
+                      人気度 {track.popularity}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Add to Playlist CTA */}
+          <div style={{ 
+            marginTop: '2rem', 
+            padding: '1.5rem', 
+            background: 'var(--light-gray)', 
+            borderRadius: '12px',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+              💡 プレイリストをさらに充実させませんか？
+            </h3>
+            <p style={{ color: 'var(--dark-gray)', fontSize: '0.875rem' }}>
+              気に入った楽曲をSpotifyで開いて、プレイリストに追加してみましょう
+            </p>
           </div>
         </div>
       )}
