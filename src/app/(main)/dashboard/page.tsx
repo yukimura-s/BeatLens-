@@ -103,7 +103,7 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    if (session?.accessToken) {
+    if ((session as any)?.accessToken) {
       fetchUserProfile()
       fetchCurrentlyPlaying()
       fetchUserStats()
@@ -121,7 +121,7 @@ export default function DashboardPage() {
     try {
       const response = await fetch('https://api.spotify.com/v1/me', {
         headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
+          Authorization: `Bearer ${(session as any)?.accessToken}`,
         },
       })
       const userData = await response.json()
@@ -138,7 +138,7 @@ export default function DashboardPage() {
       // Fetch current playback state
       const response = await fetch('https://api.spotify.com/v1/me/player', {
         headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
+          Authorization: `Bearer ${(session as any)?.accessToken}`,
         },
       })
       
@@ -164,7 +164,7 @@ export default function DashboardPage() {
     try {
       const response = await fetch(`https://api.spotify.com/v1/audio-features/${trackId}`, {
         headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
+          Authorization: `Bearer ${(session as any)?.accessToken}`,
         },
       })
       if (response.ok) {
@@ -181,7 +181,7 @@ export default function DashboardPage() {
       // Fetch playlists count
       const playlistsResponse = await fetch('https://api.spotify.com/v1/me/playlists?limit=1', {
         headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
+          Authorization: `Bearer ${(session as any)?.accessToken}`,
         },
       })
       const playlistsData = await playlistsResponse.json()
@@ -190,10 +190,10 @@ export default function DashboardPage() {
       // Fetch top tracks and artists
       const [topTracksResponse, topArtistsResponse] = await Promise.all([
         fetch('https://api.spotify.com/v1/me/top/tracks?limit=5', {
-          headers: { Authorization: `Bearer ${session?.accessToken}` }
+          headers: { Authorization: `Bearer ${(session as any)?.accessToken}` }
         }),
         fetch('https://api.spotify.com/v1/me/top/artists?limit=5', {
-          headers: { Authorization: `Bearer ${session?.accessToken}` }
+          headers: { Authorization: `Bearer ${(session as any)?.accessToken}` }
         })
       ])
 

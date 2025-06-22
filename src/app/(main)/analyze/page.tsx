@@ -40,7 +40,7 @@ export default function AnalyzePage() {
   const [analyzing, setAnalyzing] = useState(false)
 
   const searchTracks = useCallback(async () => {
-    if (!searchQuery.trim() || !session?.accessToken) return
+    if (!searchQuery.trim() || !(session as any)?.accessToken) return
 
     setLoading(true)
     try {
@@ -48,7 +48,7 @@ export default function AnalyzePage() {
         `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=10`,
         {
           headers: {
-            Authorization: `Bearer ${session.accessToken}`,
+            Authorization: `Bearer ${(session as any)?.accessToken}`,
           },
         }
       )
@@ -59,10 +59,10 @@ export default function AnalyzePage() {
     } finally {
       setLoading(false)
     }
-  }, [searchQuery, session?.accessToken])
+  }, [searchQuery, session])
 
   const analyzeTrack = useCallback(async (track: SpotifyTrack) => {
-    if (!session?.accessToken) return
+    if (!(session as any)?.accessToken) return
 
     setSelectedTrack(track)
     setAnalyzing(true)
@@ -71,7 +71,7 @@ export default function AnalyzePage() {
         `https://api.spotify.com/v1/audio-features/${track.id}`,
         {
           headers: {
-            Authorization: `Bearer ${session.accessToken}`,
+            Authorization: `Bearer ${(session as any)?.accessToken}`,
           },
         }
       )
@@ -82,7 +82,7 @@ export default function AnalyzePage() {
     } finally {
       setAnalyzing(false)
     }
-  }, [session?.accessToken])
+  }, [session])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {

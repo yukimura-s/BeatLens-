@@ -30,7 +30,7 @@ export default function PlaylistsPage() {
   const [analyzing, setAnalyzing] = useState(false)
 
   useEffect(() => {
-    if (session?.accessToken) {
+    if ((session as any)?.accessToken) {
       fetchPlaylists()
     }
   }, [session])
@@ -39,7 +39,7 @@ export default function PlaylistsPage() {
     try {
       const response = await fetch('https://api.spotify.com/v1/me/playlists?limit=20', {
         headers: {
-          Authorization: `Bearer ${session?.accessToken}`,
+          Authorization: `Bearer ${(session as any)?.accessToken}`,
         },
       })
       const data = await response.json()
@@ -52,7 +52,7 @@ export default function PlaylistsPage() {
   }
 
   const analyzePlaylist = async (playlist: SpotifyPlaylist) => {
-    if (!session?.accessToken) return
+    if (!(session as any)?.accessToken) return
 
     setSelectedPlaylist(playlist)
     setAnalyzing(true)
@@ -63,7 +63,7 @@ export default function PlaylistsPage() {
         `https://api.spotify.com/v1/playlists/${playlist.id}/tracks?limit=50`,
         {
           headers: {
-            Authorization: `Bearer ${session.accessToken}`,
+            Authorization: `Bearer ${(session as any)?.accessToken}`,
           },
         }
       )
@@ -78,7 +78,7 @@ export default function PlaylistsPage() {
           `https://api.spotify.com/v1/audio-features?ids=${trackIds}`,
           {
             headers: {
-              Authorization: `Bearer ${session.accessToken}`,
+              Authorization: `Bearer ${(session as any)?.accessToken}`,
             },
           }
         )

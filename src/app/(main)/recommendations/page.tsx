@@ -35,7 +35,7 @@ export default function RecommendationsPage() {
   const [timeRange, setTimeRange] = useState<'short_term' | 'medium_term' | 'long_term'>('medium_term')
 
   useEffect(() => {
-    if (session?.accessToken) {
+    if ((session as any)?.accessToken) {
       fetchTopItems()
     }
   }, [session, timeRange])
@@ -46,10 +46,10 @@ export default function RecommendationsPage() {
       // Fetch top tracks and artists in parallel
       const [tracksResponse, artistsResponse] = await Promise.all([
         fetch(`https://api.spotify.com/v1/me/top/tracks?limit=10&time_range=${timeRange}`, {
-          headers: { Authorization: `Bearer ${session?.accessToken}` }
+          headers: { Authorization: `Bearer ${(session as any)?.accessToken}` }
         }),
         fetch(`https://api.spotify.com/v1/me/top/artists?limit=5&time_range=${timeRange}`, {
-          headers: { Authorization: `Bearer ${session?.accessToken}` }
+          headers: { Authorization: `Bearer ${(session as any)?.accessToken}` }
         })
       ])
 
@@ -79,7 +79,7 @@ export default function RecommendationsPage() {
       const response = await fetch(
         `https://api.spotify.com/v1/recommendations?seed_tracks=${seedTrackIds}&limit=20`,
         {
-          headers: { Authorization: `Bearer ${session?.accessToken}` }
+          headers: { Authorization: `Bearer ${(session as any)?.accessToken}` }
         }
       )
       const data = await response.json()
