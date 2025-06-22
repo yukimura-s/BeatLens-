@@ -28,10 +28,6 @@ interface PlaybackState {
   item: TrackData | null
 }
 
-interface AudioFeature {
-  name: string
-  value: number
-}
 
 export default function DashboardPage() {
   const { data: session } = useSession()
@@ -43,12 +39,68 @@ export default function DashboardPage() {
   const [topArtists, setTopArtists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  const [audioFeatures] = useState<AudioFeature[]>([
-    { name: 'エネルギー', value: 85 },
-    { name: 'ダンス適性', value: 72 },
-    { name: 'アコースティック度', value: 23 },
-    { name: 'ポジティブ度', value: 68 }
-  ])
+  // 円グラフコンポーネント
+  const CircularProgress = ({ 
+    value, 
+    size = 120, 
+    strokeWidth = 8, 
+    color = 'var(--electric-purple)',
+    backgroundColor = 'var(--light-gray)',
+    children 
+  }: {
+    value: number
+    size?: number
+    strokeWidth?: number
+    color?: string
+    backgroundColor?: string
+    children: React.ReactNode
+  }) => {
+    const radius = (size - strokeWidth) / 2
+    const circumference = radius * Math.PI * 2
+    const strokeDasharray = circumference
+    const strokeDashoffset = circumference - (value / 100) * circumference
+
+    return (
+      <div style={{ position: 'relative', width: size, height: size }}>
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={backgroundColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={color}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 1s ease' }}
+          />
+        </svg>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center'
+        }}>
+          {children}
+        </div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     if (session?.accessToken) {
@@ -351,44 +403,112 @@ export default function DashboardPage() {
             {/* Audio Features */}
             {currentTrackFeatures && (
               <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>
-                  リアルタイム楽曲分析
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '2rem' }}>
+                  🎵 楽曲の雰囲気分析
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                  <div className="progress-item">
-                    <div className="progress-header">
-                      <span className="progress-label">エネルギー</span>
-                      <span className="progress-value">{Math.round(currentTrackFeatures.energy * 100)}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${currentTrackFeatures.energy * 100}%` }}></div>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                  gap: '2rem',
+                  justifyItems: 'center'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <CircularProgress 
+                      value={Math.round(currentTrackFeatures.energy * 100)}
+                      color="var(--neon-pink)"
+                      size={140}
+                    >
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--neon-pink)' }}>
+                        {Math.round(currentTrackFeatures.energy * 100)}%
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--dark-gray)', marginTop: '0.25rem' }}>
+                        エネルギッシュさ
+                      </div>
+                    </CircularProgress>
+                    <div style={{ marginTop: '1rem' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                        🔥 パワフルさ
+                      </h4>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--dark-gray)', lineHeight: 1.4 }}>
+                        {currentTrackFeatures.energy > 0.7 ? '激しくパワフルな楽曲' :
+                         currentTrackFeatures.energy > 0.4 ? '程よいエネルギーの楽曲' : 
+                         '落ち着いた穏やかな楽曲'}
+                      </p>
                     </div>
                   </div>
-                  <div className="progress-item">
-                    <div className="progress-header">
-                      <span className="progress-label">ダンス適性</span>
-                      <span className="progress-value">{Math.round(currentTrackFeatures.danceability * 100)}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${currentTrackFeatures.danceability * 100}%` }}></div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <CircularProgress 
+                      value={Math.round(currentTrackFeatures.danceability * 100)}
+                      color="var(--mint-green)"
+                      size={140}
+                    >
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--mint-green)' }}>
+                        {Math.round(currentTrackFeatures.danceability * 100)}%
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--dark-gray)', marginTop: '0.25rem' }}>
+                        踊りやすさ
+                      </div>
+                    </CircularProgress>
+                    <div style={{ marginTop: '1rem' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                        💃 ダンサブル
+                      </h4>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--dark-gray)', lineHeight: 1.4 }}>
+                        {currentTrackFeatures.danceability > 0.7 ? 'ダンスにぴったりなリズム' :
+                         currentTrackFeatures.danceability > 0.4 ? '心地良いグルーヴ感' : 
+                         'ゆったりとしたテンポ'}
+                      </p>
                     </div>
                   </div>
-                  <div className="progress-item">
-                    <div className="progress-header">
-                      <span className="progress-label">ポジティブ度</span>
-                      <span className="progress-value">{Math.round(currentTrackFeatures.valence * 100)}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${currentTrackFeatures.valence * 100}%` }}></div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <CircularProgress 
+                      value={Math.round(currentTrackFeatures.valence * 100)}
+                      color="var(--sunset-orange)"
+                      size={140}
+                    >
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--sunset-orange)' }}>
+                        {Math.round(currentTrackFeatures.valence * 100)}%
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--dark-gray)', marginTop: '0.25rem' }}>
+                        明るさ
+                      </div>
+                    </CircularProgress>
+                    <div style={{ marginTop: '1rem' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                        ☀️ ポジティブ度
+                      </h4>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--dark-gray)', lineHeight: 1.4 }}>
+                        {currentTrackFeatures.valence > 0.7 ? '明るく楽しい気分になる' :
+                         currentTrackFeatures.valence > 0.4 ? '程よく心地良い雰囲気' : 
+                         '深く感情的な楽曲'}
+                      </p>
                     </div>
                   </div>
-                  <div className="progress-item">
-                    <div className="progress-header">
-                      <span className="progress-label">アコースティック度</span>
-                      <span className="progress-value">{Math.round(currentTrackFeatures.acousticness * 100)}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill" style={{ width: `${currentTrackFeatures.acousticness * 100}%` }}></div>
+
+                  <div style={{ textAlign: 'center' }}>
+                    <CircularProgress 
+                      value={Math.round(currentTrackFeatures.acousticness * 100)}
+                      color="var(--ocean-blue)"
+                      size={140}
+                    >
+                      <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--ocean-blue)' }}>
+                        {Math.round(currentTrackFeatures.acousticness * 100)}%
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--dark-gray)', marginTop: '0.25rem' }}>
+                        生楽器感
+                      </div>
+                    </CircularProgress>
+                    <div style={{ marginTop: '1rem' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                        🎸 アコースティック
+                      </h4>
+                      <p style={{ fontSize: '0.875rem', color: 'var(--dark-gray)', lineHeight: 1.4 }}>
+                        {currentTrackFeatures.acousticness > 0.7 ? '生楽器中心の温かい音' :
+                         currentTrackFeatures.acousticness > 0.4 ? '電子と生楽器のバランス' : 
+                         '電子音楽・シンセ中心'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -444,21 +564,6 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Audio Features */}
-      <div className="card">
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem' }}>音楽的特徴</h2>
-        {audioFeatures.map((feature, index) => (
-          <div key={index} className="progress-item">
-            <div className="progress-header">
-              <span className="progress-label">{feature.name}</span>
-              <span className="progress-value">{feature.value}%</span>
-            </div>
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${feature.value}%` }}></div>
-            </div>
-          </div>
-        ))}
-      </div>
     </>
   )
 }
