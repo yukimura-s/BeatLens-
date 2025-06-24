@@ -31,6 +31,7 @@ interface TopArtist {
   genres: string[]
   images: { url: string }[]
   popularity: number
+  followers?: { total: number }
 }
 
 interface EnhancedTrack extends SpotifyTrack {
