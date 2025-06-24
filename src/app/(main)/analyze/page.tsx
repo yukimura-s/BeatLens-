@@ -505,12 +505,12 @@ export default function AnalyzePage() {
         <div className="card">
           <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '2rem' }}>音楽的特徴</h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
             <div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>感情・エネルギー</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>🎵 楽曲の特徴</h3>
               <div className="progress-item">
                 <div className="progress-header">
-                  <span className="progress-label">エネルギー</span>
+                  <span className="progress-label">🔥 パワフルさ</span>
                   <span className="progress-value">{Math.round(audioFeatures.energy * 100)}%</span>
                 </div>
                 <div className="progress-bar">
@@ -519,7 +519,7 @@ export default function AnalyzePage() {
               </div>
               <div className="progress-item">
                 <div className="progress-header">
-                  <span className="progress-label">ポジティブ度</span>
+                  <span className="progress-label">😊 明るさ</span>
                   <span className="progress-value">{Math.round(audioFeatures.valence * 100)}%</span>
                 </div>
                 <div className="progress-bar">
@@ -528,7 +528,7 @@ export default function AnalyzePage() {
               </div>
               <div className="progress-item">
                 <div className="progress-header">
-                  <span className="progress-label">ダンス適性</span>
+                  <span className="progress-label">💃 踊りやすさ</span>
                   <span className="progress-value">{Math.round(audioFeatures.danceability * 100)}%</span>
                 </div>
                 <div className="progress-bar">
@@ -538,32 +538,40 @@ export default function AnalyzePage() {
             </div>
 
             <div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>音響特性</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>🎸 音の種類</h3>
               <div className="progress-item">
                 <div className="progress-header">
-                  <span className="progress-label">アコースティック度</span>
+                  <span className="progress-label">🎼 生楽器感</span>
                   <span className="progress-value">{Math.round(audioFeatures.acousticness * 100)}%</span>
                 </div>
                 <div className="progress-bar">
                   <div className="progress-fill" style={{ width: `${audioFeatures.acousticness * 100}%` }}></div>
                 </div>
               </div>
-              <div className="progress-item">
-                <div className="progress-header">
-                  <span className="progress-label">インストゥルメンタル度</span>
-                  <span className="progress-value">{Math.round(audioFeatures.instrumentalness * 100)}%</span>
+              <div style={{ 
+                padding: '1rem',
+                background: 'var(--light-gray)',
+                borderRadius: '8px',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)', marginBottom: '0.5rem' }}>
+                  🎤 ボーカル・楽器
                 </div>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${audioFeatures.instrumentalness * 100}%` }}></div>
+                <div style={{ fontSize: '1rem', fontWeight: '600' }}>
+                  {audioFeatures.instrumentalness > 0.5 ? '🎼 楽器のみ' : '🎤 ボーカル入り'}
                 </div>
               </div>
-              <div className="progress-item">
-                <div className="progress-header">
-                  <span className="progress-label">スピーチ度</span>
-                  <span className="progress-value">{Math.round(audioFeatures.speechiness * 100)}%</span>
+              <div style={{ 
+                padding: '1rem',
+                background: 'var(--light-gray)',
+                borderRadius: '8px'
+              }}>
+                <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)', marginBottom: '0.5rem' }}>
+                  🎵 音楽の種類
                 </div>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${audioFeatures.speechiness * 100}%` }}></div>
+                <div style={{ fontSize: '1rem', fontWeight: '600' }}>
+                  {audioFeatures.speechiness > 0.66 ? '🗣️ トーク・スピーチ' : 
+                   audioFeatures.speechiness > 0.33 ? '🎤 ラップ系' : '🎵 メロディ中心'}
                 </div>
               </div>
             </div>
@@ -571,7 +579,7 @@ export default function AnalyzePage() {
 
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
             gap: '1rem',
             padding: '1.5rem',
             background: 'var(--light-gray)',
@@ -581,25 +589,19 @@ export default function AnalyzePage() {
               <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--electric-purple)' }}>
                 {Math.round(audioFeatures.tempo)} BPM
               </div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>テンポ</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>⏱️ テンポ</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--electric-purple)' }}>
                 {getKeyName(audioFeatures.key)}
               </div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>キー</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>🎹 キー</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--electric-purple)' }}>
                 {getModeName(audioFeatures.mode)}
               </div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>モード</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--electric-purple)' }}>
-                {audioFeatures.time_signature}/4
-              </div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>拍子</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>🎵 調性</div>
             </div>
           </div>
         </div>

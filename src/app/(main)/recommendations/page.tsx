@@ -358,9 +358,9 @@ export default function RecommendationsPage() {
               <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--neon-pink)' }}>
                 {Math.round(userProfile.avgEnergy * 100)}%
               </div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>平均エネルギー</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>パワフルさ</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--dark-gray)', marginTop: '0.5rem' }}>
-                {userProfile.avgEnergy > 0.7 ? '🔥 ハイエナジー好き' : 
+                {userProfile.avgEnergy > 0.7 ? '🔥 パワフル好き' : 
                  userProfile.avgEnergy > 0.4 ? '⚡ バランス型' : '🌊 落ち着いた音楽好き'}
               </div>
             </div>
@@ -368,9 +368,9 @@ export default function RecommendationsPage() {
               <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--mint-green)' }}>
                 {Math.round(userProfile.avgDanceability * 100)}%
               </div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>ダンス度</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>踊りやすさ</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--dark-gray)', marginTop: '0.5rem' }}>
-                {userProfile.avgDanceability > 0.7 ? '💃 ダンサブル' : 
+                {userProfile.avgDanceability > 0.7 ? '💃 踊りやすい' : 
                  userProfile.avgDanceability > 0.4 ? '🎵 リズミカル' : '🎼 メロディ重視'}
               </div>
             </div>
@@ -378,7 +378,7 @@ export default function RecommendationsPage() {
               <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--sunset-orange)' }}>
                 {Math.round(userProfile.avgValence * 100)}%
               </div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>ポジティブ度</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>明るさ</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--dark-gray)', marginTop: '0.5rem' }}>
                 {userProfile.avgValence > 0.7 ? '😊 明るい音楽好き' : 
                  userProfile.avgValence > 0.4 ? '🎭 バランス型' : '🌙 深い音楽好き'}
@@ -388,7 +388,7 @@ export default function RecommendationsPage() {
               <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--ocean-blue)' }}>
                 {Math.round(userProfile.avgTempo)} BPM
               </div>
-              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>好みのテンポ</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--dark-gray)' }}>テンポ</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--dark-gray)', marginTop: '0.5rem' }}>
                 {userProfile.avgTempo > 140 ? '🏃 アップテンポ好き' : 
                  userProfile.avgTempo > 100 ? '🚶 ミディアムテンポ好き' : '🐌 スローテンポ好き'}
@@ -580,7 +580,7 @@ export default function RecommendationsPage() {
                         color: 'white', 
                         borderRadius: '8px' 
                       }}>
-                        🔥 エネルギッシュ
+                        🔥 パワフル
                       </span>
                     )}
                     {track.audioFeatures.danceability > 0.7 && (
@@ -591,7 +591,7 @@ export default function RecommendationsPage() {
                         color: 'white', 
                         borderRadius: '8px' 
                       }}>
-                        💃 ダンサブル
+                        💃 踊りやすい
                       </span>
                     )}
                     {track.audioFeatures.valence > 0.7 && (
@@ -602,7 +602,7 @@ export default function RecommendationsPage() {
                         color: 'white', 
                         borderRadius: '8px' 
                       }}>
-                        😊 ハッピー
+                        😊 明るい
                       </span>
                     )}
                   </div>

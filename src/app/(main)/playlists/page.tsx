@@ -369,10 +369,10 @@ export default function PlaylistsPage() {
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
             <div>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>平均的な特徴</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>🎵 音楽の特徴</h3>
               <div className="progress-item">
                 <div className="progress-header">
-                  <span className="progress-label">エネルギー</span>
+                  <span className="progress-label">🔥 パワフルさ</span>
                   <span className="progress-value">{Math.round(playlistAnalysis.energy * 100)}%</span>
                 </div>
                 <div className="progress-bar">
@@ -381,7 +381,7 @@ export default function PlaylistsPage() {
               </div>
               <div className="progress-item">
                 <div className="progress-header">
-                  <span className="progress-label">ダンス適性</span>
+                  <span className="progress-label">💃 踊りやすさ</span>
                   <span className="progress-value">{Math.round(playlistAnalysis.danceability * 100)}%</span>
                 </div>
                 <div className="progress-bar">
@@ -390,7 +390,7 @@ export default function PlaylistsPage() {
               </div>
               <div className="progress-item">
                 <div className="progress-header">
-                  <span className="progress-label">ポジティブ度</span>
+                  <span className="progress-label">😊 明るさ</span>
                   <span className="progress-value">{Math.round(playlistAnalysis.valence * 100)}%</span>
                 </div>
                 <div className="progress-bar">
@@ -399,7 +399,7 @@ export default function PlaylistsPage() {
               </div>
               <div className="progress-item">
                 <div className="progress-header">
-                  <span className="progress-label">アコースティック度</span>
+                  <span className="progress-label">🎼 生楽器感</span>
                   <span className="progress-value">{Math.round(playlistAnalysis.acousticness * 100)}%</span>
                 </div>
                 <div className="progress-bar">
@@ -413,7 +413,7 @@ export default function PlaylistsPage() {
               background: 'var(--light-gray)',
               borderRadius: '12px'
             }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>統計情報</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>📊 データ</h3>
               <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                 <div style={{ fontSize: '2rem', fontWeight: '700', color: 'var(--electric-purple)' }}>
                   {Math.round(playlistAnalysis.tempo)} BPM
